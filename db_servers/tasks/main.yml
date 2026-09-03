@@ -1,2 +1,20 @@
 ---
-# tasks file for db_servers
+- name: install mariadb package (CentOS)
+  tags: centos,db,mariadb
+  yum:
+    name: mariadb-server
+    state: latest
+  when: ansible_distribution == "CentOS"
+
+- name: install mariadb package (Ubuntu)
+  tags: ubuntu,db,mariadb
+  apt:
+    name: mariadb-server
+    state: latest
+  when: ansible_distribution == "Ubuntu"
+
+- name: "MariaDB - Restarting/Enabling"
+  service:
+    name: mariadb
+    state: restarted
+    enabled: true
