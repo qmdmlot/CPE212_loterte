@@ -1,0 +1,25 @@
+---
+- name: install Nagios dependencies on Ubuntu
+  hosts: ubuntu_servers
+  become: true
+
+  tasks:
+    - name: install
+      ansible.builtin.apt:
+        name:
+          - build-essential
+          - gcc
+          - make
+          - autoconf
+          - automake
+          - apache2
+          - php
+          - libapache2-mod-php
+          - libgd-dev
+          - libssl-dev
+          - libperl-dev
+          - libsnmp-perl
+          - snmp
+        state: present
+        update_cache: true
+      when: ansible_distribution == "Ubuntu"

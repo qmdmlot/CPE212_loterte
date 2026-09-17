@@ -1,0 +1,29 @@
+---
+- name: Install Nagios Dependencies for CentOS
+  hosts: centos_servers
+  become: true
+
+  tasks:
+    - name: enable EPEL repository
+      ansible.builtin.dnf:
+        name: epel-release
+        state: present
+    - name: install
+      ansible.builtin.dnf:
+        name:
+          - gcc
+          - make
+          - autoconf
+          - automake
+          - httpd
+          - php
+          - gd
+          - gd-devel
+          - openssl-devel
+          - perl
+          - perl-Net-SNMP
+          - net-snmp
+          - net-snmp-utils
+        state: present
+        update_cache: true
+      when: ansible_distribution == "CentOS"

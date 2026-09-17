@@ -1,0 +1,16 @@
+---
+- name: install Nagios core on Ubuntu
+  hosts: ubuntu_servers
+  become: true
+
+  tasks:
+    - name: Download and extract Nagios Core Source
+      ansible.builtin.unarchive:
+        src: https://assets.nagios.com/downloads/nagioscore/releases/nagios-4.5.1.tar.gz
+        dest: /tmp
+        remote_src: true
+      when: ansible_distribution == "Ubuntu"
+
+
+
+
