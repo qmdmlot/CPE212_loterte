@@ -1,0 +1,31 @@
+---
+#tasks file for nagios_centos
+- name: Enable EPEL repository
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+
+- name: Install Nagios dependencies on CentOS
+  ansible.builtin.dnf:
+    name:
+      - gcc
+      - make
+      - autoconf
+      - automake
+      - httpd
+      - php
+      - gd
+      - gd-devel
+      - openssl-devel
+      - perl
+      - perl-Net-SNMP
+      - net-snmp
+      - net-snmp-utils
+    state: present
+
+- name: Download and extract Nagios Core source
+  ansible.builtin.unarchive:
+    src: https://assets.nagios.com/downloads/nagioscore/releases/nagios-4.5.1.tar.gz
+    dest: /tmp
+    remote_src: true
+    creates: /tmp/nagios-4.5.1

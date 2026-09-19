@@ -1,0 +1,27 @@
+---
+# tasks file for nagios_ubuntu
+- name: Install Nagios dependencies on Ubuntu
+  ansible.builtin.apt:
+    name:
+      - build-essential
+      - gcc
+      - make
+      - autoconf
+      - automake
+      - apache2
+      - php
+      - libapache2-mod-php
+      - libgd-dev
+      - libssl-dev
+      - libperl-dev
+      - libsnmp-perl
+      - snmp
+    state: present
+    update_cache: true
+
+- name: Download and extract Nagios Core source
+  ansible.builtin.unarchive:
+    src: https://assets.nagios.com/downloads/nagioscore/releases/nagios-4.5.1.tar.gz
+    dest: /tmp
+    remote_src: true
+    creates: /tmp/nagios-4.5.1
