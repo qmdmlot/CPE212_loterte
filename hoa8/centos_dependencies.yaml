@@ -8,6 +8,7 @@
       ansible.builtin.dnf:
         name: epel-release
         state: present
+
     - name: install
       ansible.builtin.dnf:
         name:
@@ -25,5 +26,8 @@
           - net-snmp
           - net-snmp-utils
         state: present
+
+    - name: update package cache CentOS
+      ansible.builtin.package:
         update_cache: true
       when: ansible_distribution == "CentOS"

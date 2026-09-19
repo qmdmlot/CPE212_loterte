@@ -1,6 +1,6 @@
 ---
-- name: install Nagios Core on Ubuntu
-  hosts: ubuntu_servers
+- name: install Nagios Core on CentOS
+  hosts: centos_servers
   become: true
 
   tasks:
@@ -10,4 +10,4 @@
         dest: /tmp
         remote_src: true
         creates: /tmp/nagios-4.5.1
-      when: ansible_distribution == "Ubuntu"
+      when: ansible_distribution == "CentOS"
