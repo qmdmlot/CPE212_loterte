@@ -1,0 +1,14 @@
+---
+
+- name: Install and configure Prometheus on Ubuntu servers
+  hosts: ubuntu_servers
+  become: true
+  roles:
+    - prometheus_ubuntu
+
+- name: Install and configure Prometheus on CentOS servers
+  hosts: centos_servers
+  become: true
+  roles:
+    - prometheus_centos
+

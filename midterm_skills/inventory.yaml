@@ -1,0 +1,12 @@
+all:
+  children:
+    ubuntu_servers:
+      hosts:
+        ubuntu-node:
+          ansible_host: 192.168.56.110
+    centos_servers:
+      hosts:
+        centos-node:
+          ansible_host: 192.168.56.114
+
+
