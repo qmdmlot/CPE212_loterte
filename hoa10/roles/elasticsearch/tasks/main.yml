@@ -1,0 +1,90 @@
+---
+# tasks file for elasticsearch for ubuntu workstation
+- name: install apt prerequisites
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - gnupg
+      - ca-certificates
+    state: present
+    update_cache: true
+
+- name: download Elastic GPG key
+  ansible.builtin.get_url:
+    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    dest: /usr/share/keyrings/elastic.asc
+    mode: '0644'
+
+- name: add Elastic apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/elastic.asc] https://artifacts.elastic.co/packages/9.x/apt stable main"
+    filename: elastic-9.x
+    state: present
+    update_cache: true
+
+- name: set vm.max_map_count required by Elasticsearch
+  ansible.posix.sysctl:
+    name: vm.max_map_count
+    value: '1048576'
+    sysctl_set: true
+    state: present
+    reload: true
+
+- name: install Elasticsearch
+  ansible.builtin.apt:
+    name: elasticsearch
+    state: present
+
+- name: set Elasticsearch heap size to 1GB
+  ansible.builtin.copy:
+    dest: /etc/elasticsearch/jvm.options.d/heap.options
+    content: |
+      -Xms1g
+      -Xmx1g
+    owner: root
+    group: elasticsearch
+    mode: '0660'
+
+- name: create Elasticsearch configuration file
+  ansible.builtin.copy:
+    dest: /etc/elasticsearch/elasticsearch.yml
+    content: |
+      cluster.name: hoa10-cluster
+      node.name: ubuntu-workstation
+      path.data: /var/lib/elasticsearch
+      path.logs: /var/log/elasticsearch
+      network.host: 0.0.0.0
+      http.port: 9200
+      discovery.type: single-node
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
+      xpack.security.transport.ssl.enabled: false
+      xpack.security.http.ssl.enabled: false #all disabled for lab purposes only
+    owner: root
+    group: elasticsearch
+    mode: '0660'
+
+- name: Clear stale X-Pack SSL entries from Elasticsearch keystore
+  ansible.builtin.shell: |
+    /usr/share/elasticsearch/bin/elasticsearch-keystore remove xpack.security.transport.ssl.keystore.secure_password || true
+    /usr/share/elasticsearch/bin/elasticsearch-keystore remove xpack.security.transport.ssl.truststore.secure_password || true
+    /usr/share/elasticsearch/bin/elasticsearch-keystore remove xpack.security.http.ssl.keystore.secure_password || true
+    /usr/share/elasticsearch/bin/elasticsearch-keystore remove xpack.security.http.ssl.truststore.secure_password || true
+  become: true
+  become_user: elasticsearch
+
+- name: Start and enable Elasticsearch service
+  ansible.builtin.systemd:
+    name: elasticsearch
+    state: restarted
+    enabled: true
+    daemon_reload: true
+
+- name: wait for Elasticsearch to answer on port 9200
+  ansible.builtin.uri:
+    url: http://127.0.0.1:9200
+    status_code: 200
+  register: es_up
+  until: es_up.status == 200
+  retries: 30
+  delay: 5

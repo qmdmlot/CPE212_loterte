@@ -1,0 +1,24 @@
+---
+- name: Apply updates to all managed nodes
+  hosts: all
+  become: true
+  roles:
+    - common
+
+- name: Install and configure Elasticsearch on Ubuntu workstation
+  hosts: elasticsearch_servers
+  become: true
+  roles:
+    - elasticsearch
+
+- name: Install and configure Kibana on Ubuntu remote host
+  hosts: kibana_servers
+  become: true
+  roles:
+    - kibana
+
+- name: Install and configure Logstash on CentOS remote host
+  hosts: logstash_servers
+  become: true
+  roles:
+    - logstash

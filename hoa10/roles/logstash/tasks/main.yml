@@ -1,0 +1,83 @@
+---
+# tasks file for logstash for centos remote host
+- name: import Elastic GPG key
+  ansible.builtin.rpm_key:
+    key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    state: present
+
+- name: add Elastic yum repository
+  ansible.builtin.yum_repository:
+    name: elastic-9.x
+    description: Elastic repository for 9.x packages
+    baseurl: https://artifacts.elastic.co/packages/9.x/yum
+    gpgcheck: true
+    gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    enabled: true
+    state: present
+
+- name: install Logstash
+  ansible.builtin.dnf:
+    name: logstash
+    state: present
+
+- name: set Logstash heap size (min) to 512MB
+  ansible.builtin.lineinfile:
+    path: /etc/logstash/jvm.options
+    regexp: '^-Xms'
+    line: "-Xms512m"
+
+- name: set Logstash heap size (max) to 512MB
+  ansible.builtin.lineinfile:
+    path: /etc/logstash/jvm.options
+    regexp: '^-Xmx'
+    line: "-Xmx512m"
+
+- name: create Logstash pipeline file
+  ansible.builtin.copy:
+    dest: /etc/logstash/conf.d/syslog-pipeline.conf
+    content: |
+      input {
+        syslog {
+          port => 5140
+        }
+        beats {
+          port => 5044
+        }
+      }
+
+      output {
+        elasticsearch {
+          hosts => ["http://192.168.56.105:9200"]
+          data_stream => false
+          index => "syslog-%{+YYYY.MM.dd}"
+        }
+      }
+    owner: root
+    group: logstash
+    mode: '0640'
+
+- name: open Logstash ports in firewalld
+  ansible.posix.firewalld:
+    port: "{{ item }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop:
+    - 5140/tcp
+    - 5140/udp
+    - 5044/tcp
+    - 9600/tcp
+  ignore_errors: true
+
+- name: Start and enable Logstash service
+  ansible.builtin.systemd:
+    name: logstash
+    state: restarted
+    enabled: true
+    daemon_reload: true
+
+- name: wait for Logstash syslog input on port 5140
+  ansible.builtin.wait_for:
+    port: 5140
+    host: 127.0.0.1
+    timeout: 300

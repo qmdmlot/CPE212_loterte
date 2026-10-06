@@ -1,0 +1,15 @@
+all:
+  children:
+    elasticsearch_servers:
+      hosts:
+        ubuntu-workstation:
+          ansible_host: 192.168.56.105
+          ansible_connection: local
+    kibana_servers:
+      hosts:
+        ubuntu-node:
+          ansible_host: 192.168.56.104
+    logstash_servers:
+      hosts:
+        centos-node:
+          ansible_host: 192.168.56.103

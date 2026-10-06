@@ -1,0 +1,59 @@
+---
+# tasks file for kibana for ubuntu remote host
+- name: install apt prerequisites
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - gnupg
+      - ca-certificates
+    state: present
+    update_cache: true
+
+- name: download Elastic GPG key
+  ansible.builtin.get_url:
+    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    dest: /usr/share/keyrings/elastic.asc
+    mode: '0644'
+
+- name: add Elastic apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/elastic.asc] https://artifacts.elastic.co/packages/9.x/apt stable main"
+    filename: elastic-9.x
+    state: present
+    update_cache: true
+
+- name: install Kibana
+  ansible.builtin.apt:
+    name: kibana
+    state: present
+
+- name: limit Kibana memory use to 768MB
+  ansible.builtin.lineinfile:
+    path: /etc/kibana/node.options
+    regexp: '^--max-old-space-size='
+    line: "--max-old-space-size=768"
+
+- name: create Kibana configuration file
+  ansible.builtin.copy:
+    dest: /etc/kibana/kibana.yml
+    content: |
+      server.port: 5601
+      server.host: "0.0.0.0"
+      server.name: "ubuntu-node"
+      elasticsearch.hosts: ["http://192.168.56.105:9200"]
+    owner: root
+    group: kibana
+    mode: '0660'
+
+- name: Start and enable Kibana service
+  ansible.builtin.systemd:
+    name: kibana
+    state: restarted
+    enabled: true
+    daemon_reload: true
+
+- name: wait for Kibana to listen on port 5601
+  ansible.builtin.wait_for:
+    port: 5601
+    host: 127.0.0.1
+    timeout: 300
