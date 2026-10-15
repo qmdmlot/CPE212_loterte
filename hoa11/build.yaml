@@ -1,0 +1,41 @@
+---
+- name: Build Docker image and run container
+  hosts: control_node
+  become: true
+
+  tasks:
+    - name: Create directory for Docker build files
+      ansible.builtin.file:
+        path: /opt/docker-app
+        state: directory
+        mode: '0755'
+
+    - name: Copy Dockerfile
+      ansible.builtin.copy:
+        src: Dockerfile
+        dest: /opt/docker-app/Dockerfile
+        mode: '0644'
+
+    - name: Copy start.sh
+      ansible.builtin.copy:
+        src: start.sh
+        dest: /opt/docker-app/start.sh
+        mode: '0755'
+
+    - name: Build Docker image
+      community.docker.docker_image:
+        name: ubuntu-nginx-mariadb
+        build:
+          path: /opt/docker-app
+        source: build
+        state: present
+
+    - name: Run container
+      community.docker.docker_container:
+        name: ubuntu-app
+        image: ubuntu-nginx-mariadb
+        state: started
+        restart_policy: always
+        published_ports:
+          - "80:80"
+          - "3306:3306"
